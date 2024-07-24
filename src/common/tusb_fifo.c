@@ -470,7 +470,7 @@ static uint16_t _tu_fifo_write_n(tu_fifo_t* f, const void * data, uint16_t n, tu
 {
   if ( n == 0 ) return 0;
 
-  _ff_lock(f->mutex_wr);
+  if ( (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) == 0 ) _ff_lock(f->mutex_wr);
 
   uint16_t wr_idx = f->wr_idx;
   uint16_t rd_idx = f->rd_idx;
@@ -548,14 +548,14 @@ static uint16_t _tu_fifo_write_n(tu_fifo_t* f, const void * data, uint16_t n, tu
     TU_LOG(TU_FIFO_DBG, "\tnew_wr = %u\r\n", f->wr_idx);
   }
 
-  _ff_unlock(f->mutex_wr);
+  if ( (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) == 0 ) _ff_unlock(f->mutex_wr);
 
   return n;
 }
 
 static uint16_t _tu_fifo_read_n(tu_fifo_t* f, void * buffer, uint16_t n, tu_fifo_copy_mode_t copy_mode)
 {
-  _ff_lock(f->mutex_rd);
+  if ( (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) == 0 ) _ff_lock(f->mutex_rd);
 
   // Peek the data
   // f->rd_idx might get modified in case of an overflow so we can not use a local variable
@@ -564,7 +564,7 @@ static uint16_t _tu_fifo_read_n(tu_fifo_t* f, void * buffer, uint16_t n, tu_fifo
   // Advance read pointer
   f->rd_idx = advance_index(f->depth, f->rd_idx, n);
 
-  _ff_unlock(f->mutex_rd);
+  if ( (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) == 0 ) _ff_unlock(f->mutex_rd);
   return n;
 }
 
